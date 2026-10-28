@@ -35,52 +35,111 @@ export default async function handler(req, res) {
       });
     }
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{
-              text: "Eres PULSO AI, un ayudante escolar amable. Explica las materias en español claro, paso a paso y con ejemplos sencillos."
-            }]
-          },
-          contents: [{
-            role: "user",
-            parts: [{ text: message.trim() }]
-          }]
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Gemini:", data.error);
-
-      return res.status(502).json({
-        error: data.error?.message || "No se pudo consultar la IA."
+    if (message.length > 5000) {
+      return res.status(400).json({
+        error: "El mensaje es demasiado largo."
       });
     }
 
-    const answer = data.candidates?.[0]?.content?.parts
-      ?.map(part => part.text || "")
-      .join("")
-      .trim();
+    // Consultar los modelos disponibles para esta clave.
+    const modelsResponse = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models",
+      {
+        headers: {
+          "x-goog-api-key": apiKey
+        }
+      }
+    );
 
-    return res.status(200).json({
-      answer: answer || "No recibí una respuesta."
+    const modelsData = await modelsResponse.json();
+
+    if (!modelsResponse.ok) {
+      return res.status(502).json({
+        error: modelsData.error?.message ||
+          "No pude consultar los modelos disponibles."
+      });
+    }
+
+    const models = (modelsData.models || [])
+      .filter(model =>
+        model.supportedGenerationMethods?.includes("generateContent") &&
+        /flash/i.test(model.name)
+      )
+      .sort((a, b) => {
+        const score = model =>
+          /flash-lite/i.test(model.name) ? 0 : 1;
+        return score(a) - score(b);
+      });
+
+    if (models.length === 0) {
+      return res.status(502).json({
+        error: "Tu clave no muestra modelos Flash disponibles. Revisa Google AI Studio."
+      });
+    }
+
+    let lastError = "No se pudo obtener una respuesta.";
+
+    // Probar modelos disponibles, sin repetir ninguno.
+    for (const model of models.slice(0, 3)) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${model.name}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{
+                text: "Eres PULSO AI, un ayudante escolar amable. Explica en español claro, paso a paso y con ejemplos sencillos. Ayuda a comprender las materias."
+              }]
+            },
+            contents: [{
+              role: "user",
+              parts: [{ text: message.trim() }]
+            }]
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const answer = data.candidates?.[0]?.content?.parts
+          ?.map(part => part.text || "")
+          .join("")
+          .trim();
+
+        if (answer) {
+          return res.status(200).json({ answer });
+        }
+
+        lastError = "El modelo no devolvió texto.";
+      } else {
+        lastError = data.error?.message ||
+          `Error al consultar ${model.name}`;
+
+        // Solo probar otro modelo ante saturación o límites temporales.
+        if (
+          response.status !== 429 &&
+          response.status !== 503 &&
+          response.status !== 500
+        ) {
+          break;
+        }
+      }
+    }
+
+    return res.status(502).json({
+      error: "PULSO AI no pudo responder. " + lastError
     });
 
   } catch (error) {
-    console.error("PULSO AI:", error);
+    console.error("Error en PULSO AI:", error);
 
     return res.status(500).json({
-      error: "Error de conexión con PULSO AI."
+      error: "Error de conexión. Inténtalo de nuevo."
     });
   }
 }
