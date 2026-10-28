@@ -1,0 +1,618 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PULSO+ 2.0</title>
+<style>
+:root {
+  --bg:#090909;
+  --panel:#111111;
+  --panel2:#181818;
+  --border:#292929;
+  --text:#f7f7f7;
+  --muted:#999;
+  --accent:#fff;
+  --radius:18px;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  min-height:100vh;
+}
+button,input,textarea,select {font:inherit}
+button {cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible {
+  outline:2px solid white;outline-offset:3px
+}
+.app {display:flex;min-height:100vh}
+.sidebar {
+  width:245px;flex-shrink:0;padding:25px 16px;
+  border-right:1px solid var(--border);
+  background:#0c0c0c;display:flex;flex-direction:column;
+}
+.brand {font-size:26px;font-weight:900;letter-spacing:2px;padding:8px 12px}
+.brand span {color:#888}
+.tagline {color:var(--muted);font-size:12px;padding:0 12px 28px}
+.nav-label {color:#777;font-size:10px;letter-spacing:2px;padding:10px 12px}
+.nav {display:grid;gap:7px}
+.nav button {
+  border:1px solid transparent;background:transparent;color:#aaa;
+  padding:13px 14px;text-align:left;border-radius:12px;
+  transition:.2s;
+}
+.nav button:hover,.nav button.active {
+  color:white;background:#202020;border-color:#333;
+}
+.nav button.active {box-shadow:inset 3px 0 white}
+.sidebar-bottom {margin-top:auto;padding:18px 12px 0;color:#777;font-size:12px}
+main {flex:1;min-width:0}
+.topbar {
+  height:75px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;position:sticky;top:0;background:#090909ed;
+  backdrop-filter:blur(15px);z-index:5;
+}
+.top-title {font-weight:700}
+.status {font-size:12px;color:#aaa;display:flex;align-items:center;gap:8px}
+.dot {width:7px;height:7px;border-radius:50%;background:#aaa}
+.content {max-width:1100px;margin:auto;padding:32px}
+.page {display:none;animation:appear .3s ease}
+.page.active {display:block}
+@keyframes appear {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1 {font-size:clamp(27px,4vw,40px);margin:0 0 10px;letter-spacing:-1px}
+h2 {font-size:20px;margin:0 0 16px}
+p {line-height:1.6}
+.muted {color:var(--muted)}
+.hero {
+  padding:34px;border:1px solid #333;border-radius:24px;
+  background:linear-gradient(130deg,#202020,#0e0e0e 65%);
+  position:relative;overflow:hidden;margin-bottom:24px;
+}
+.hero:after {
+  content:"+";position:absolute;right:25px;top:-45px;
+  font-size:200px;font-weight:200;color:#ffffff08;pointer-events:none;
+}
+.hero p {color:#aaa;max-width:520px}
+.hero .actions {display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn {
+  background:white;color:#090909;border:1px solid white;
+  padding:11px 16px;border-radius:11px;font-weight:700;
+  transition:transform .15s,opacity .15s;
+}
+.btn:hover {transform:translateY(-2px)}
+.btn.secondary {background:#181818;color:white;border-color:#333}
+.btn:disabled {opacity:.45;cursor:not-allowed;transform:none}
+.grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.card {border:1px solid var(--border);background:var(--panel);border-radius:var(--radius);padding:22px;min-width:0}
+.card:hover {border-color:#444}
+.stat {font-size:30px;font-weight:800;margin:15px 0 4px}
+.card-icon {font-size:20px;margin-bottom:16px}
+.section-row {display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 15px}
+.quick {display:flex;gap:10px;flex-wrap:wrap}
+.quick button {background:#151515;border:1px solid #333;color:white;padding:12px 15px;border-radius:12px}
+.field {
+  width:100%;background:#0c0c0c;border:1px solid #333;
+  color:white;border-radius:12px;padding:13px 14px;margin-bottom:12px;
+}
+textarea.field {resize:vertical;min-height:115px}
+.field:focus {border-color:#888;outline:none}
+.row {display:flex;gap:10px;align-items:center}
+.row .field {margin:0}
+.list {display:grid;gap:10px;margin-top:18px}
+.item {
+  display:flex;align-items:flex-start;gap:12px;padding:15px;
+  border:1px solid #292929;background:#121212;border-radius:13px;
+}
+.item .item-body {flex:1;min-width:0;overflow-wrap:anywhere}
+.item.done .item-body {color:#777;text-decoration:line-through}
+.small-btn {background:#202020;border:1px solid #333;color:white;border-radius:9px;padding:8px 10px}
+.empty {text-align:center;padding:35px 15px;color:#777;border:1px dashed #333;border-radius:14px}
+.tool-result {font-size:28px;font-weight:800;overflow-wrap:anywhere;margin:20px 0}
+.calc {max-width:390px}
+.calc-screen {background:#050505;border:1px solid #333;border-radius:14px;padding:20px;text-align:right;margin-bottom:12px;min-height:86px;overflow-wrap:anywhere}
+.calc-screen .expression {color:#777;font-size:13px;min-height:20px}
+.calc-screen .value {font-size:30px;font-weight:700}
+.calc-grid {display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-grid button {height:55px;background:#1a1a1a;color:white;border:1px solid #333;border-radius:12px;font-size:18px}
+.calc-grid button:hover {background:#333}
+.calc-grid .operator {background:#292929}
+.calc-grid .equals {background:white;color:black}
+.timer-display {font-size:clamp(48px,10vw,75px);font-weight:800;letter-spacing:2px;margin:25px 0}
+.timer-wrap {text-align:center;max-width:500px;margin:30px auto}
+.timer-controls {display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}
+.ai-layout {display:flex;flex-direction:column;height:min(650px,72vh);min-height:440px}
+.ai-head {display:flex;align-items:center;gap:12px;padding:18px;border-bottom:1px solid #292929}
+.ai-avatar {width:42px;height:42px;border-radius:13px;background:white;color:black;display:grid;place-items:center;font-weight:900;font-size:19px}
+.ai-messages {flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.message {max-width:85%;padding:13px 15px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+.message.ai {background:#1b1b1b;border:1px solid #303030;align-self:flex-start}
+.message.user {background:white;color:#090909;align-self:flex-end}
+.message.error {border-color:#633;background:#211313;color:#ffbaba}
+.ai-compose {padding:14px;border-top:1px solid #292929}
+.ai-compose form {display:flex;gap:10px;align-items:flex-end}
+.ai-compose textarea {min-height:48px;max-height:130px;resize:vertical;margin:0}
+.ai-compose .btn {height:48px}
+.ai-hint {font-size:11px;color:#777;margin-top:9px}
+.note-item {white-space:pre-wrap}
+.toast {
+  position:fixed;bottom:22px;right:22px;background:#f5f5f5;color:#111;
+  padding:13px 18px;border-radius:12px;z-index:30;
+  box-shadow:0 10px 40px #0008;animation:appear .2s ease;
+}
+.mobile-menu {display:none}
+footer {padding:35px 0 10px;text-align:center;color:#666;font-size:12px}
+@media(max-width:800px) {
+ .sidebar {width:210px}
+ .content {padding:22px}
+ .grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px) {
+ .app {display:block}
+ .sidebar {
+  position:fixed;z-index:20;top:0;bottom:0;left:0;
+  transform:translateX(-105%);transition:transform .25s;
+  width:260px;box-shadow:15px 0 40px #0005;
+ }
+ .sidebar.open {transform:translateX(0)}
+ .topbar {height:64px;padding:0 16px}
+ .mobile-menu {display:inline-block;background:#1b1b1b;color:white;border:1px solid #333;border-radius:9px;padding:8px 11px;margin-right:10px}
+ .top-left {display:flex;align-items:center}
+ .content {padding:20px 15px}
+ .grid {grid-template-columns:1fr}
+ .hero {padding:24px}
+ .message {max-width:94%}
+ .ai-layout {height:70vh;min-height:420px}
+ .ai-compose form {gap:7px}
+ .ai-compose .btn {padding:10px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">PULSO<span>+</span></div>
+    <div class="tagline">TU ESPACIO. TUS IDEAS.</div>
+    <div class="nav-label">MENÚ PRINCIPAL</div>
+    <nav class="nav">
+      <button class="active" data-page="home">⌂ &nbsp; Inicio</button>
+      <button data-page="ai">✦ &nbsp; PULSO AI</button>
+      <button data-page="calculator">＋ &nbsp; Calculadora</button>
+      <button data-page="timer">◷ &nbsp; Temporizador</button>
+      <button data-page="tasks">✓ &nbsp; Mis tareas</button>
+      <button data-page="notes">▤ &nbsp; Mis notas</button>
+    </nav>
+    <div class="sidebar-bottom">PULSO+ · Versión 2.0.0<br><br>Hecho para avanzar.</div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="top-left">
+        <button class="mobile-menu" id="menuBtn" aria-label="Abrir menú">☰</button>
+        <span class="top-title" id="topTitle">Inicio</span>
+      </div>
+      <div class="status"><span class="dot"></span><span>Tu espacio personal</span></div>
+    </header>
+
+    <div class="content">
+      <section class="page active" id="page-home">
+        <div class="hero">
+          <div class="muted" style="letter-spacing:2px;font-size:11px">BIENVENIDO A PULSO+</div>
+          <h1>Haz que cada idea cuente.</h1>
+          <p>Organiza tus tareas, guarda tus ideas y estudia con tu asistente escolar.</p>
+          <div class="actions">
+            <button class="btn" data-go="ai">Abrir PULSO AI ↗</button>
+            <button class="btn secondary" data-go="tasks">Ver mis tareas</button>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="card-icon">✦</div><div class="muted">Asistente escolar</div>
+            <div class="stat" style="font-size:23px">PULSO AI</div>
+            <div class="muted">Pregunta, aprende y practica.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">✓</div><div class="muted">Tareas pendientes</div>
+            <div class="stat" id="pendingStat">0</div><div class="muted">Por completar</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">▤</div><div class="muted">Mis notas</div>
+            <div class="stat" id="notesStat">0</div><div class="muted">Ideas guardadas</div>
+          </div>
+        </div>
+        <div class="section-row"><h2>Accesos rápidos</h2></div>
+        <div class="quick">
+          <button data-go="calculator">＋ Calculadora</button>
+          <button data-go="timer">◷ Temporizador</button>
+          <button data-go="notes">▤ Nueva nota</button>
+          <button data-go="tasks">✓ Nueva tarea</button>
+        </div>
+        <footer>PULSO+ · GRATIS · SIMPLE · CONFIABLE</footer>
+      </section>
+
+      <section class="page" id="page-ai">
+        <h1>PULSO AI <span style="color:#777">✦</span></h1>
+        <p class="muted">Tu ayudante escolar. Pregunta con tus propias palabras y aprende paso a paso.</p>
+        <div class="card" style="padding:0;overflow:hidden;margin-top:22px">
+          <div class="ai-layout">
+            <div class="ai-head">
+              <div class="ai-avatar">P+</div>
+              <div><strong>PULSO AI</strong><div class="muted" style="font-size:12px;margin-top:4px">Ayudante de estudio</div></div>
+              <button class="small-btn" id="clearChat" style="margin-left:auto">Nuevo chat</button>
+            </div>
+            <div class="ai-messages" id="messages" aria-live="polite">
+              <div class="message ai">¡Hola! Soy PULSO AI. 🤖
+
+Puedo ayudarte con matemáticas, ciencias, lenguaje, historia y otras materias.
+
+¿Qué estás estudiando hoy?</div>
+            </div>
+            <div class="ai-compose">
+              <form id="aiForm">
+                <textarea id="aiInput" class="field" placeholder="Escribe tu pregunta escolar..." maxlength="5000" required></textarea>
+                <button class="btn" id="sendBtn" type="submit">Enviar ↗</button>
+              </form>
+              <div class="ai-hint">Revisa las respuestas y pregunta si necesitas otra explicación. No incluyas datos personales.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-calculator">
+        <h1>Calculadora</h1><p class="muted">Operaciones básicas, sin complicaciones.</p>
+        <div class="card calc">
+          <div class="calc-screen"><div class="expression" id="calcExpression">PULSO+</div><div class="value" id="calcDisplay">0</div></div>
+          <div class="calc-grid" id="calcButtons">
+            <button data-calc="clear">AC</button><button data-calc="back">⌫</button><button data-calc="op" data-value="%">%</button><button class="operator" data-calc="op" data-value="/">÷</button>
+            <button data-calc="digit" data-value="7">7</button><button data-calc="digit" data-value="8">8</button><button data-calc="digit" data-value="9">9</button><button class="operator" data-calc="op" data-value="*">×</button>
+            <button data-calc="digit" data-value="4">4</button><button data-calc="digit" data-value="5">5</button><button data-calc="digit" data-value="6">6</button><button class="operator" data-calc="op" data-value="-">−</button>
+            <button data-calc="digit" data-value="1">1</button><button data-calc="digit" data-value="2">2</button><button data-calc="digit" data-value="3">3</button><button class="operator" data-calc="op" data-value="+">+</button>
+            <button data-calc="digit" data-value="0">0</button><button data-calc="digit" data-value=".">.</button><button data-calc="sign">±</button><button class="equals" data-calc="equals">=</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-timer">
+        <h1>Temporizador</h1><p class="muted">Organiza tus sesiones de estudio y descansos.</p>
+        <div class="card timer-wrap">
+          <div class="muted">TIEMPO RESTANTE</div>
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="row" style="justify-content:center">
+            <input class="field" id="timerMinutes" type="number" min="0" max="999" value="25" aria-label="Minutos" style="max-width:120px;text-align:center">
+            <span class="muted">min</span>
+            <input class="field" id="timerSeconds" type="number" min="0" max="59" value="0" aria-label="Segundos" style="max-width:100px;text-align:center">
+            <span class="muted">seg</span>
+          </div>
+          <div class="timer-controls">
+            <button class="btn" id="timerStart">▶ Iniciar</button>
+            <button class="btn secondary" id="timerReset">↺ Reiniciar</button>
+          </div>
+          <p class="muted" id="timerStatus">Listo para comenzar.</p>
+        </div>
+      </section>
+
+      <section class="page" id="page-tasks">
+        <h1>Mis tareas</h1><p class="muted">Un paso a la vez. Marca cada tarea cuando termines.</p>
+        <div class="card" style="margin-top:22px">
+          <form id="taskForm" class="row">
+            <input id="taskInput" class="field" placeholder="¿Qué necesitas hacer?" maxlength="250" required>
+            <button class="btn" type="submit">Añadir</button>
+          </form>
+          <div class="section-row"><h2>Tu lista</h2><button class="small-btn" id="clearCompleted">Borrar completadas</button></div>
+          <div id="taskList" class="list"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-notes">
+        <h1>Mis notas</h1><p class="muted">Guarda ideas, apuntes y recordatorios.</p>
+        <div class="card" style="margin-top:22px">
+          <form id="noteForm">
+            <input id="noteTitle" class="field" placeholder="Título de la nota" maxlength="100" required>
+            <textarea id="noteText" class="field" placeholder="Escribe tu nota aquí..." maxlength="10000" required></textarea>
+            <button class="btn" type="submit">Guardar nota</button>
+          </form>
+          <div class="section-row"><h2>Notas guardadas</h2></div>
+          <div id="noteList" class="list"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<div id="toastHost"></div>
+
+<script>
+"use strict";
+
+/* PULSO+ - Herramientas locales */
+const $ = id => document.getElementById(id);
+const safeRead = (key, fallback) => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  } catch { return fallback; }
+};
+const safeSave = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch { toast("No se pudo guardar en este navegador."); }
+};
+function toast(message) {
+  const host = $("toastHost");
+  host.replaceChildren();
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = message;
+  host.append(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+/* Navegación */
+const titles = {
+  home:"Inicio", ai:"PULSO AI", calculator:"Calculadora",
+  timer:"Temporizador", tasks:"Mis tareas", notes:"Mis notas"
+};
+function go(page) {
+  if (!titles[page]) return;
+  document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+  $("page-" + page).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(el =>
+    el.classList.toggle("active", el.dataset.page === page)
+  );
+  $("topTitle").textContent = titles[page];
+  $("sidebar").classList.remove("open");
+}
+document.querySelectorAll("[data-page]").forEach(button =>
+  button.addEventListener("click", () => go(button.dataset.page))
+);
+document.querySelectorAll("[data-go]").forEach(button =>
+  button.addEventListener("click", () => {
+    const page = button.dataset.go;
+    go(page);
+    if (page === "tasks") $("taskInput").focus();
+    if (page === "notes") $("noteTitle").focus();
+  })
+);
+$("menuBtn").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+
+/* Tareas */
+let tasks = safeRead("pulso_tasks", []);
+if (!Array.isArray(tasks)) tasks = [];
+function renderTasks() {
+  const list = $("taskList");
+  list.replaceChildren();
+  if (!tasks.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Todavía no tienes tareas. ¡Añade la primera!";
+    list.append(empty);
+  }
+  tasks.forEach(task => {
+    const item = document.createElement("div");
+    item.className = "item" + (task.done ? " done" : "");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox"; checkbox.checked = !!task.done;
+    checkbox.setAttribute("aria-label", "Marcar tarea como completada");
+    checkbox.addEventListener("change", () => {
+      task.done = checkbox.checked; persistTasks();
+    });
+    const body = document.createElement("div");
+    body.className = "item-body"; body.textContent = task.text;
+    const del = document.createElement("button");
+    del.className = "small-btn"; del.textContent = "Eliminar";
+    del.addEventListener("click", () => {
+      tasks = tasks.filter(t => t.id !== task.id); persistTasks();
+    });
+    item.append(checkbox, body, del); list.append(item);
+  });
+  $("pendingStat").textContent = tasks.filter(t => !t.done).length;
+}
+function persistTasks() {
+  safeSave("pulso_tasks", tasks); renderTasks();
+}
+$("taskForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const text = $("taskInput").value.trim();
+  if (!text) return;
+  tasks.unshift({id:Date.now() + Math.random(), text, done:false});
+  persistTasks(); $("taskInput").value = ""; toast("Tarea guardada.");
+});
+$("clearCompleted").addEventListener("click", () => {
+  tasks = tasks.filter(task => !task.done); persistTasks(); toast("Lista actualizada.");
+});
+renderTasks();
+
+/* Notas */
+let notes = safeRead("pulso_notes", []);
+if (!Array.isArray(notes)) notes = [];
+function renderNotes() {
+  const list = $("noteList"); list.replaceChildren();
+  $("notesStat").textContent = notes.length;
+  if (!notes.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty"; empty.textContent = "Aquí aparecerán tus notas guardadas.";
+    list.append(empty);
+  }
+  notes.forEach(note => {
+    const item = document.createElement("div"); item.className = "item";
+    const body = document.createElement("div"); body.className = "item-body";
+    const title = document.createElement("strong"); title.textContent = note.title;
+    const text = document.createElement("p"); text.className = "muted note-item"; text.textContent = note.text;
+    body.append(title, text);
+    const edit = document.createElement("button"); edit.className = "small-btn"; edit.textContent = "Editar";
+    edit.addEventListener("click", () => {
+      $("noteTitle").value = note.title; $("noteText").value = note.text;
+      notes = notes.filter(n => n.id !== note.id); persistNotes();
+      $("noteTitle").focus(); window.scrollTo({top:0, behavior:"smooth"});
+    });
+    const del = document.createElement("button"); del.className = "small-btn"; del.textContent = "Eliminar";
+    del.addEventListener("click", () => {
+      notes = notes.filter(n => n.id !== note.id); persistNotes(); toast("Nota eliminada.");
+    });
+    const controls = document.createElement("div"); controls.style.display="grid"; controls.style.gap="6px";
+    controls.append(edit,del); item.append(body,controls); list.append(item);
+  });
+}
+function persistNotes() { safeSave("pulso_notes", notes); renderNotes(); }
+$("noteForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const title = $("noteTitle").value.trim(), text = $("noteText").value.trim();
+  if (!title || !text) return;
+  notes.unshift({id:Date.now() + Math.random(), title, text});
+  persistNotes(); $("noteForm").reset(); toast("Nota guardada.");
+});
+renderNotes();
+
+/* Calculadora: solo permite números y operadores básicos */
+let calcExpression = "";
+let calcFresh = false;
+function updateCalc(expression = "") {
+  $("calcExpression").textContent = expression || "PULSO+";
+  $("calcDisplay").textContent = calcExpression || "0";
+}
+function calcEquals() {
+  if (!calcExpression) return;
+  if (!/^[0-9+\-*/%.() ]+$/.test(calcExpression)) {
+    toast("Operación no válida."); return;
+  }
+  try {
+    const result = Function('"use strict"; return (' + calcExpression + ')')();
+    if (!Number.isFinite(result)) throw new Error();
+    const old = calcExpression;
+    calcExpression = String(Number(result.toPrecision(12)));
+    $("calcExpression").textContent = old + " =";
+    $("calcDisplay").textContent = calcExpression;
+    calcFresh = true;
+  } catch {
+    toast("No se puede realizar esa operación.");
+  }
+}
+$("calcButtons").addEventListener("click", event => {
+  const button = event.target.closest("button[data-calc]");
+  if (!button) return;
+  const type = button.dataset.calc, value = button.dataset.value;
+  if (type === "clear") { calcExpression = ""; calcFresh = false; updateCalc(); return; }
+  if (type === "back") { calcExpression = calcExpression.slice(0,-1); calcFresh=false; updateCalc(); return; }
+  if (type === "equals") { calcEquals(); return; }
+  if (type === "sign") {
+    if (calcExpression) calcExpression = "-(" + calcExpression + ")";
+    updateCalc(); return;
+  }
+  if (type === "digit") {
+    if (calcFresh) { calcExpression = ""; calcFresh = false; }
+    calcExpression += value; updateCalc(); return;
+  }
+  if (type === "op") {
+    if (calcFresh) calcFresh = false;
+    if (value === "%" && calcExpression) calcExpression += "/100";
+    else calcExpression += value;
+    updateCalc(); return;
+  }
+});
+document.addEventListener("keydown", event => {
+  const active = document.querySelector(".page.active");
+  if (!active || active.id !== "page-calculator") return;
+  if (/^[0-9.]$/.test(event.key)) { calcExpression += event.key; updateCalc(); }
+  else if (["+", "-", "*", "/", "%", "(", ")"].includes(event.key)) { calcExpression += event.key; updateCalc(); }
+  else if (event.key === "Enter") { event.preventDefault(); calcEquals(); }
+  else if (event.key === "Backspace" && document.activeElement.tagName !== "INPUT") {
+    calcExpression = calcExpression.slice(0,-1); updateCalc();
+  }
+});
+
+/* Temporizador */
+let remaining = 25 * 60, timerInterval = null;
+function displayTimer() {
+  const m = Math.floor(remaining / 60), s = remaining % 60;
+  $("timerDisplay").textContent = String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+  $("timerStart").textContent = "▶ Iniciar";
+}
+$("timerStart").addEventListener("click", () => {
+  if (timerInterval) { stopTimer(); $("timerStatus").textContent = "Temporizador pausado."; return; }
+  if (remaining <= 0) {
+    const mins = Math.max(0, Math.min(999, Number($("timerMinutes").value) || 0));
+    const secs = Math.max(0, Math.min(59, Number($("timerSeconds").value) || 0));
+    remaining = Math.floor(mins) * 60 + Math.floor(secs); displayTimer();
+  }
+  if (remaining <= 0) { toast("Configura un tiempo mayor que cero."); return; }
+  $("timerStatus").textContent = "Tiempo en marcha. ¡Concéntrate!";
+  $("timerStart").textContent = "Ⅱ Pausar";
+  timerInterval = setInterval(() => {
+    remaining--; displayTimer();
+    if (remaining <= 0) {
+      stopTimer(); $("timerStatus").textContent = "¡Tiempo terminado! Buen trabajo.";
+      toast("¡Sesión terminada!");
+    }
+  }, 1000);
+});
+$("timerReset").addEventListener("click", () => {
+  stopTimer();
+  remaining = Math.max(0, Number($("timerMinutes").value)||0) * 60 +
+              Math.max(0, Number($("timerSeconds").value)||0);
+  remaining = Math.min(remaining, 999*60+59);
+  displayTimer(); $("timerStatus").textContent = "Temporizador reiniciado.";
+});
+displayTimer();
+
+/* PULSO AI: llama al backend publicado en Vercel */
+const API_URL = "https://pulso-ai-smoky.vercel.app/api/chat";
+const chatHistory = [];
+function addMessage(text, type) {
+  const messages = $("messages");
+  const bubble = document.createElement("div");
+  bubble.className = "message " + type;
+  bubble.textContent = text;
+  messages.append(bubble);
+  messages.scrollTop = messages.scrollHeight;
+  return bubble;
+}
+$("clearChat").addEventListener("click", () => {
+  chatHistory.length = 0;
+  $("messages").replaceChildren();
+  addMessage("¡Hola otra vez! ¿Qué tarea vamos a resolver hoy?", "ai");
+});
+$("aiForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const input = $("aiInput");
+  const message = input.value.trim();
+  if (!message) return;
+  addMessage(message, "user");
+  input.value = "";
+  $("sendBtn").disabled = true;
+  $("sendBtn").textContent = "…";
+  const loading = addMessage("Estoy preparando una respuesta…", "ai");
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({message})
+    });
+    let data;
+    try { data = await response.json(); }
+    catch { throw new Error("El servidor no devolvió una respuesta válida."); }
+    if (!response.ok) throw new Error(data.error || ("Error del servidor: " + response.status));
+    if (typeof data.answer !== "string" || !data.answer.trim()) {
+      throw new Error("La IA no devolvió texto. Revisa la configuración del servidor.");
+    }
+    loading.textContent = data.answer;
+    chatHistory.push({question:message, answer:data.answer});
+  } catch (error) {
+    loading.classList.add("error");
+    if (error instanceof TypeError) {
+      loading.textContent = "No pude conectar con el servidor. Puede que falten permisos CORS o que el servidor aún no esté configurado. Revisaremos el backend.";
+    } else {
+      loading.textContent = "No pude obtener una respuesta: " + error.message;
+    }
+  } finally {
+    $("sendBtn").disabled = false;
+    $("sendBtn").textContent = "Enviar ↗";
+    input.focus();
+  }
+});
+</script>
+</body>
+</html>
