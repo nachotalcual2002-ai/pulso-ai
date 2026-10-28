@@ -18,35 +18,25 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({
-      error: "Falta configurar la clave de IA en Vercel."
+      error: "Falta configurar GEMINI_API_KEY en Vercel."
     });
   }
 
   try {
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body)
-        : req.body || {};
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body || {};
 
     const message = body.message;
 
-    if (
-      typeof message !== "string" ||
-      !message.trim()
-    ) {
+    if (typeof message !== "string" || !message.trim()) {
       return res.status(400).json({
         error: "Escribe una pregunta."
       });
     }
 
-    if (message.length > 5000) {
-      return res.status(400).json({
-        error: "Tu mensaje es demasiado largo."
-      });
-    }
-
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       {
         method: "POST",
         headers: {
@@ -56,14 +46,12 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           systemInstruction: {
             parts: [{
-              text: "Eres PULSO AI, el asistente de PULSO+. Ayudas con tareas escolares, matemáticas, ciencias, lenguaje, tecnología y otras materias. Habla en español claro, explica paso a paso y utiliza ejemplos sencillos. Sé amable, preciso y útil. Ayuda al estudiante a comprender."
+              text: "Eres PULSO AI, un ayudante escolar amable. Explica las materias en español claro, paso a paso y con ejemplos sencillos."
             }]
           },
           contents: [{
             role: "user",
-            parts: [{
-              text: message.trim()
-            }]
+            parts: [{ text: message.trim() }]
           }]
         })
       }
@@ -72,30 +60,27 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Error de Gemini:", data.error);
+      console.error("Gemini:", data.error);
 
       return res.status(502).json({
-        error:
-          data.error?.message ||
-          "La IA no pudo responder. Inténtalo otra vez."
+        error: data.error?.message || "No se pudo consultar la IA."
       });
     }
 
-    const answer =
-      data.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("")
-        .trim();
+    const answer = data.candidates?.[0]?.content?.parts
+      ?.map(part => part.text || "")
+      .join("")
+      .trim();
 
     return res.status(200).json({
       answer: answer || "No recibí una respuesta."
     });
 
   } catch (error) {
-    console.error("Error en PULSO AI:", error);
+    console.error("PULSO AI:", error);
 
     return res.status(500).json({
-      error: "Error de conexión. Inténtalo de nuevo."
+      error: "Error de conexión con PULSO AI."
     });
   }
 }
